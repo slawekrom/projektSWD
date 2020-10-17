@@ -63,7 +63,7 @@ class OpenFileDialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
+        Dialog.setWindowTitle(_translate("Dialog", "Otwórz plik"))
         self.fileLabel.setText(_translate("Dialog", "Plik"))
         self.separatorBox.setTitle(_translate("Dialog", "Separator"))
         self.tabRadio.setText(_translate("Dialog", "Tab"))

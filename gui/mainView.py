@@ -11,13 +11,21 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from gui.openFileDialog import OpenFileDialog
 from operation.FileLoader import FileLoader
+from data.PandasModel import PandasModel
+from data.DataFrame import DataFrame
 
 class Ui_MainWindow(object):
+
+    def __init__(self):
+        self.data_frame = DataFrame()
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
+        self.tableView = QtWidgets.QTableView(self.centralwidget)
+        self.tableView.setGeometry(QtCore.QRect(0, 0, 631, 541))
+        self.tableView.setObjectName("tableView")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21))
@@ -32,6 +40,7 @@ class Ui_MainWindow(object):
         self.actionLoad_data.setObjectName("actionLoad_data")
         self.menuFile.addAction(self.actionLoad_data)
         self.menubar.addAction(self.menuFile.menuAction())
+
         self.actionLoad_data.triggered.connect(lambda: self.openDialog())
 
         self.retranslateUi(MainWindow)
@@ -47,12 +56,13 @@ class Ui_MainWindow(object):
 
     def openDialog(self):
         print("ASADDADADD")
-        self.dialog = QtWidgets.QDialog()
+        self.open_file_dialog = QtWidgets.QDialog()
         self.ui = OpenFileDialog()
-        self.ui.setupUi(self.dialog)
-        self.dialog.show()
+        self.ui.setupUi(self.open_file_dialog)
+        self.open_file_dialog.show()
         self.ui.filePathInput.text()
         self.ui.okButton.clicked.connect(lambda: self.open_file())
+        self.ui.cancelButton.clicked.connect(lambda: self.close_file_dialog())
 
     def open_file(self):
         file_path = self.ui.filePathInput.text()
@@ -73,9 +83,17 @@ class Ui_MainWindow(object):
         if is_headers:
             col_index = 0
         file_loader: FileLoader = FileLoader()
-        df = file_loader.loadFile(file_path, separator, col_index)
-        print(df.columns)
+        self.data_frame.df = file_loader.loadFile(file_path, separator, col_index)
+        self.setup_table(self.data_frame)
+        print(self.data_frame.df.columns)
+        self.close_file_dialog()
 
+    def close_file_dialog(self):
+        self.open_file_dialog.close()
+
+    def setup_table(self, df):
+        self.pandas_model: PandasModel = PandasModel(df)
+        self.tableView.setModel(self.pandas_model)
 
 if __name__ == "__main__":
     import sys
