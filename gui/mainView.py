@@ -10,6 +10,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from gui.openFileDialog import OpenFileDialog
+from gui.NumDialog import NumDialog
 from operation.FileLoader import FileLoader
 from data.PandasModel import PandasModel
 from data.DataFrame import DataFrame
@@ -32,16 +33,23 @@ class Ui_MainWindow(object):
         self.menubar.setObjectName("menubar")
         self.menuFile = QtWidgets.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
+        self.menuEdit = QtWidgets.QMenu(self.menubar)
+        self.menuEdit.setObjectName("menuEdit")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
         self.actionLoad_data = QtWidgets.QAction(MainWindow)
         self.actionLoad_data.setObjectName("actionLoad_data")
+        self.actionChangeValOnNUmber = QtWidgets.QAction(MainWindow)
+        self.actionChangeValOnNUmber.setObjectName("actionChangeValOnNUmber")
         self.menuFile.addAction(self.actionLoad_data)
+        self.menuEdit.addAction(self.actionChangeValOnNUmber)
         self.menubar.addAction(self.menuFile.menuAction())
+        self.menubar.addAction(self.menuEdit.menuAction())
 
-        self.actionLoad_data.triggered.connect(lambda: self.openDialog())
+        self.actionLoad_data.triggered.connect(lambda: self.openDialogLoad())
+        self.actionChangeValOnNUmber.triggered.connect(lambda: self.openDialogNum())
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -50,19 +58,40 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.menuFile.setTitle(_translate("MainWindow", "Plik"))
+        self.menuEdit.setTitle(_translate("MainWindow", "Edycja"))
         self.actionLoad_data.setText(_translate("MainWindow", "Wczytaj dane"))
+        self.actionChangeValOnNUmber.setText(_translate("MainWindow", "Zmień na dane numeryczne"))
 
         
 
-    def openDialog(self):
+    def openDialogLoad(self):
         print("ASADDADADD")
         self.open_file_dialog = QtWidgets.QDialog()
         self.ui = OpenFileDialog()
         self.ui.setupUi(self.open_file_dialog)
         self.open_file_dialog.show()
-        self.ui.filePathInput.text()
+        #self.ui.filePathInput.text()
         self.ui.okButton.clicked.connect(lambda: self.open_file())
         self.ui.cancelButton.clicked.connect(lambda: self.close_file_dialog())
+
+    def openDialogNum(self):
+        print("ASADDADADD")
+        self.num_dialog = QtWidgets.QDialog()
+        self.ui_num = NumDialog()
+        self.ui_num.setupUi(self.num_dialog)
+        lst = ["asas", "rwrw"]
+        self.ui_num.comboBoxColumn.addItems(self.data_frame.df.columns)
+        self.num_dialog.show()
+        self.ui_num.okButton.clicked.connect(lambda: self.change_to_num())
+        self.ui_num.cancelButton.clicked.connect(lambda: self.close_num_dialog())
+
+    def change_to_num(self):
+        col = self.ui_num.comboBoxColumn.currentText()
+        is_alpha = self.ui_num.radioButtonAlpha.isChecked()
+        print(col)
+        print(is_alpha)
+        self.data_frame.change_to_number(col, is_alpha)
+        self.close_num_dialog()
 
     def open_file(self):
         file_path = self.ui.filePathInput.text()
@@ -84,12 +113,17 @@ class Ui_MainWindow(object):
             col_index = 0
         file_loader: FileLoader = FileLoader()
         self.data_frame.df = file_loader.loadFile(file_path, separator, col_index)
-        self.setup_table(self.data_frame)
+        self.setup_table(self.data_frame.df)
         print(self.data_frame.df.columns)
+        print(self.data_frame.df.dtypes)
+        print(self.data_frame.change_to_number('day', False))
         self.close_file_dialog()
 
     def close_file_dialog(self):
         self.open_file_dialog.close()
+
+    def close_num_dialog(self):
+        self.num_dialog.close()
 
     def setup_table(self, df):
         self.pandas_model: PandasModel = PandasModel(df)
