@@ -11,6 +11,8 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from gui.openFileDialog import OpenFileDialog
 from gui.NumDialog import NumDialog
+from gui.DiscretizeDialog import DiscretizeDialog
+from gui.NormDialog import NormDialog
 from operation.FileLoader import FileLoader
 from data.PandasModel import PandasModel
 from data.DataFrame import DataFrame
@@ -43,13 +45,21 @@ class Ui_MainWindow(object):
         self.actionLoad_data.setObjectName("actionLoad_data")
         self.actionChangeValOnNUmber = QtWidgets.QAction(MainWindow)
         self.actionChangeValOnNUmber.setObjectName("actionChangeValOnNUmber")
+        self.actionDiscretize = QtWidgets.QAction(MainWindow)
+        self.actionDiscretize.setObjectName("actionDiscretize")
+        self.actionNorm = QtWidgets.QAction(MainWindow)
+        self.actionNorm.setObjectName("actionNorm")
         self.menuFile.addAction(self.actionLoad_data)
         self.menuEdit.addAction(self.actionChangeValOnNUmber)
+        self.menuEdit.addAction(self.actionDiscretize)
+        self.menuEdit.addAction(self.actionNorm)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuEdit.menuAction())
 
         self.actionLoad_data.triggered.connect(lambda: self.openDialogLoad())
         self.actionChangeValOnNUmber.triggered.connect(lambda: self.openDialogNum())
+        self.actionDiscretize.triggered.connect(lambda: self.openDisretizeDialog())
+        self.actionNorm.triggered.connect(lambda: self.openNormDialog())
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -61,6 +71,8 @@ class Ui_MainWindow(object):
         self.menuEdit.setTitle(_translate("MainWindow", "Edycja"))
         self.actionLoad_data.setText(_translate("MainWindow", "Wczytaj dane"))
         self.actionChangeValOnNUmber.setText(_translate("MainWindow", "Zmień na dane numeryczne"))
+        self.actionDiscretize.setText(_translate("MainWindow", "Dyskretyzacja"))
+        self.actionNorm.setText(_translate("MainWindow", "Normalizacja"))
 
         
 
@@ -70,16 +82,32 @@ class Ui_MainWindow(object):
         self.ui = OpenFileDialog()
         self.ui.setupUi(self.open_file_dialog)
         self.open_file_dialog.show()
-        #self.ui.filePathInput.text()
         self.ui.okButton.clicked.connect(lambda: self.open_file())
         self.ui.cancelButton.clicked.connect(lambda: self.close_file_dialog())
+
+    def openDisretizeDialog(self):
+        self.disretize_dialog = QtWidgets.QDialog()
+        self.ui_disc = DiscretizeDialog()
+        self.ui_disc.setupUi(self.disretize_dialog)
+        self.ui_disc.comboBoxColumn.addItems(self.data_frame.df.columns)
+        self.disretize_dialog.show()
+        self.ui_disc.okButton.clicked.connect(lambda: self.discretize())
+        self.ui_disc.cancelButton.clicked.connect(lambda: self.close_discretize_dialog())
+
+    def openNormDialog(self):
+        self.norm_dialog = QtWidgets.QDialog()
+        self.ui_norm = NormDialog()
+        self.ui_norm.setupUi(self.norm_dialog)
+        self.ui_norm.comboBoxColumn.addItems(self.data_frame.df.columns)
+        self.norm_dialog.show()
+        self.ui_norm.okButton.clicked.connect(lambda: self.normalize())
+        self.ui_norm.cancelButton.clicked.connect(lambda: self.close_norm_dialog())
 
     def openDialogNum(self):
         print("ASADDADADD")
         self.num_dialog = QtWidgets.QDialog()
         self.ui_num = NumDialog()
         self.ui_num.setupUi(self.num_dialog)
-        lst = ["asas", "rwrw"]
         self.ui_num.comboBoxColumn.addItems(self.data_frame.df.columns)
         self.num_dialog.show()
         self.ui_num.okButton.clicked.connect(lambda: self.change_to_num())
@@ -92,6 +120,20 @@ class Ui_MainWindow(object):
         print(is_alpha)
         self.data_frame.change_to_number(col, is_alpha)
         self.close_num_dialog()
+        print(self.data_frame.df.columns)
+
+    def discretize(self):
+        col = self.ui_disc.comboBoxColumn.currentText()
+        sets_number = self.ui_disc.lineSetNumber.text()
+        self.data_frame.discretize(col, sets_number)
+        self.setup_table(self.data_frame.df)
+        self.close_discretize_dialog()
+
+    def normalize(self):
+        col = self.ui_norm.comboBoxColumn.currentText()
+        self.data_frame.normalize(col)
+        self.setup_table(self.data_frame.df)
+        self.close_norm_dialog()
 
     def open_file(self):
         file_path = self.ui.filePathInput.text()
@@ -116,11 +158,17 @@ class Ui_MainWindow(object):
         self.setup_table(self.data_frame.df)
         print(self.data_frame.df.columns)
         print(self.data_frame.df.dtypes)
-        print(self.data_frame.change_to_number('day', False))
+        #print(self.data_frame.change_to_number('day', False))
         self.close_file_dialog()
 
     def close_file_dialog(self):
         self.open_file_dialog.close()
+
+    def close_discretize_dialog(self):
+        self.disretize_dialog.close()
+
+    def close_norm_dialog(self):
+        self.norm_dialog.close()
 
     def close_num_dialog(self):
         self.num_dialog.close()
