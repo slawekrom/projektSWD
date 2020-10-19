@@ -23,3 +23,24 @@ class DataFrame:
     def normalize(self, column_name):
         self.df[column_name + '_norm'] = np.round_(
             (self.df[column_name] - self.df[column_name].mean()) / self.df[column_name].std(), decimals=3)
+
+    def change_range(self, column_name, a, b):
+        min = self.df[column_name].min()
+        max = self.df[column_name].max()
+        print(str(min) + ' ' + str(max))
+        self.df[column_name + '_a_b'] = np.round_(((self.df[column_name] - min) / (max - min) * (b - a)) + a, decimals=
+        3)
+
+    def get_min_subset(self, column_name, percent: int):
+        print(str(percent))
+        self.sort(column_name)
+        n = round(self.df.shape[0] * (percent / 100))
+        return self.df.head(n)
+
+    def get_max_subset(self, column_name, percent: int):
+        self.sort(column_name)
+        n = round(self.df.shape[0] * (percent / 100))
+        return self.df.tail(n)
+
+    def sort(self, column_name):
+        self.df.sort_values(by=[column_name])
