@@ -15,9 +15,12 @@ from gui.DiscretizeDialog import DiscretizeDialog
 from gui.NormDialog import NormDialog
 from gui.ChangeRangeDialog import ChangeRangeDialog
 from gui.SubsetDialog import SubsetDialog
+from gui.Plot2DDialog import Plot2DDialog
+from gui.Plot2D import Plot2D
 from operation.FileLoader import FileLoader
 from data.PandasModel import PandasModel
 from data.DataFrame import DataFrame
+from pyqtgraph import PlotWidget
 
 class Ui_MainWindow(object):
 
@@ -41,6 +44,8 @@ class Ui_MainWindow(object):
         self.menuEdit.setObjectName("menuEdit")
         self.menuWy_wietl = QtWidgets.QMenu(self.menubar)
         self.menuWy_wietl.setObjectName("menuWy_wietl")
+        self.menuWykresy = QtWidgets.QMenu(self.menubar)
+        self.menuWykresy.setObjectName("menuWykresy")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
@@ -57,15 +62,25 @@ class Ui_MainWindow(object):
         self.actionChangeRange.setObjectName("actionChangeRange")
         self.actionSubset = QtWidgets.QAction(MainWindow)
         self.actionSubset.setObjectName("actionSubset")
+        self.actionHistogram = QtWidgets.QAction(MainWindow)
+        self.actionHistogram.setObjectName("actionHistogram")
+        self.action2D = QtWidgets.QAction(MainWindow)
+        self.action2D.setObjectName("action2D")
+        self.action3D = QtWidgets.QAction(MainWindow)
+        self.action3D.setObjectName("action3D")
         self.menuFile.addAction(self.actionLoad_data)
         self.menuEdit.addAction(self.actionChangeValOnNUmber)
         self.menuEdit.addAction(self.actionDiscretize)
         self.menuEdit.addAction(self.actionNorm)
         self.menuEdit.addAction(self.actionChangeRange)
         self.menuWy_wietl.addAction(self.actionSubset)
+        self.menuWykresy.addAction(self.actionHistogram)
+        self.menuWykresy.addAction(self.action2D)
+        self.menuWykresy.addAction(self.action3D)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuEdit.menuAction())
         self.menubar.addAction(self.menuWy_wietl.menuAction())
+        self.menubar.addAction(self.menuWykresy.menuAction())
 
         self.actionLoad_data.triggered.connect(lambda: self.openDialogLoad())
         self.actionChangeValOnNUmber.triggered.connect(lambda: self.openDialogNum())
@@ -73,6 +88,8 @@ class Ui_MainWindow(object):
         self.actionNorm.triggered.connect(lambda: self.openNormDialog())
         self.actionChangeRange.triggered.connect(lambda: self.open_change_range_dialog())
         self.actionSubset.triggered.connect(lambda: self.open_subset_dialog())
+        self.actionHistogram.triggered.connect(lambda: self.open_hist_dialog())
+        self.action2D.triggered.connect(lambda: self.open2d_dialog())
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -83,13 +100,16 @@ class Ui_MainWindow(object):
         self.menuFile.setTitle(_translate("MainWindow", "Plik"))
         self.menuEdit.setTitle(_translate("MainWindow", "Edycja"))
         self.menuWy_wietl.setTitle(_translate("MainWindow", "Wyświetl"))
+        self.menuWykresy.setTitle(_translate("MainWindow", "Wykresy"))
         self.actionLoad_data.setText(_translate("MainWindow", "Wczytaj dane"))
         self.actionChangeValOnNUmber.setText(_translate("MainWindow", "Zmień na dane numeryczne"))
         self.actionDiscretize.setText(_translate("MainWindow", "Dyskretyzacja"))
         self.actionNorm.setText(_translate("MainWindow", "Normalizacja"))
         self.actionChangeRange.setText(_translate("MainWindow", "Zmiana przedziału"))
-        self.actionSubset.setText(
-            _translate("MainWindow", "Procent największych/najniejszych"))
+        self.actionSubset.setText(_translate("MainWindow", "Procent największych/najniejszych"))
+        self.actionHistogram.setText(_translate("MainWindow", "Histogram"))
+        self.action2D.setText(_translate("MainWindow", "Wykres 2D"))
+        self.action3D.setText(_translate("MainWindow", "Wykres 3D"))
 
         
 
@@ -141,6 +161,34 @@ class Ui_MainWindow(object):
         self.ui_range.okButton.clicked.connect(lambda: self.change_range())
         self.ui_range.cancelButton.clicked.connect(lambda: self.close_range_dialog())
 
+    def open2d_dialog(self):
+        self.plot2d_dialog = QtWidgets.QDialog()
+        self.ui_plot2d = Plot2DDialog()
+        self.ui_plot2d.setupUi(self.plot2d_dialog)
+        self.ui_plot2d.comboBoxColumnX.addItems(self.data_frame.df.columns)
+        self.ui_plot2d.comboBoxColumnY.addItems(self.data_frame.df.columns)
+        self.plot2d_dialog.show()
+        self.ui_plot2d.okButton.clicked.connect(lambda: self.draw_plot_2d())
+
+    def draw_plot_2d(self):
+        x = self.ui_plot2d.comboBoxColumnX.currentText()
+        y = self.ui_plot2d.comboBoxColumnY.currentText()
+        is_colors = self.ui_plot2d.checkBoxColors.isChecked()
+        if is_colors:
+            color_class = 'Hrabstwo'
+        else:
+            color_class = None
+        self.plot2d: Plot2D = Plot2D(self.data_frame.df, x, y, color_class)
+        self.plot2d.show()
+
+    def open_hist_dialog(self):
+        self.hist_dialog = QtWidgets.QDialog()
+        # self.ui_hist = HistogramDialog()
+        # self.ui_hist.setupUi(self.hist_dialog)
+        # self.ui_hist.comboBoxColumn.addItems(self.data_frame.df.columns)
+        # self.hist_dialog.show()
+        # self.ui_hist.okButton.clicked.connect(lambda: self.show_hist())
+
     def open_subset_dialog(self):
         self.subset_dialog = QtWidgets.QDialog()
         self.ui_subset = SubsetDialog()
@@ -156,6 +204,12 @@ class Ui_MainWindow(object):
         print(self.data_frame.df[col].min())
         self.ui_range.labelMin.setText(str(self.data_frame.df[col].min()))
         self.ui_range.labelMax.setText(str(self.data_frame.df[col].max()))
+
+    def show_hist(self):
+        col = self.ui_hist.comboBoxColumn.currentText()
+        self.data_frame.create_histogram(col)
+        histogram = self.data_frame.create_histogram(col)
+        self.ui_hist.graphicsView = PlotWidget(histogram)
 
     def change_range(self):
         col = self.ui_range.comboBoxColumn.currentText()
