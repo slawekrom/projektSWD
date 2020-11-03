@@ -284,11 +284,11 @@ class Ui_MainWindow(object):
             separator = ';'
 
         is_headers = self.ui.checkBoxHeaders.isChecked()
-        col_index = False
-        if is_headers:
-            col_index = 0
         file_loader: FileLoader = FileLoader()
-        self.data_frame.df = file_loader.loadFile(file_path, separator, col_index)
+        if is_headers:
+            self.data_frame.df = file_loader.loadFile(file_path, separator)
+        else:
+            self.data_frame.df = file_loader.loadFile_and_add_headers(file_path, separator)
         self.setup_table(self.data_frame.df)
         print(self.data_frame.df.columns)
         print(self.data_frame.df.dtypes)
