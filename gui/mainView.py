@@ -21,11 +21,11 @@ class Ui_MainWindow(object):
         self.data_frame = DataFrame()
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(800, 600)
+        MainWindow.resize(965, 664)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.tableView = QtWidgets.QTableView(self.centralwidget)
-        self.tableView.setGeometry(QtCore.QRect(0, 0, 631, 541))
+        self.tableView.setGeometry(QtCore.QRect(0, 0, 921, 621))
         self.tableView.setObjectName("tableView")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
