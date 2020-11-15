@@ -42,5 +42,12 @@ class DataFrame:
         n = round(self.df.shape[0] * (percent / 100))
         return self.df.tail(n)
 
+    def append(self, values: str, object_class):
+        values_array = np.array(values.split(" ")).astype(np.float)
+        new_object = np.append(values_array, 0.0)
+        self.df.loc[len(self.df)] = new_object
+        columns = self.df.columns
+        self.df.at[len(self.df) - 1, columns[len(columns) -1]] = object_class
+
     def sort(self, column_name):
         self.df.sort_values(by=[column_name])

@@ -14,6 +14,8 @@ from operation.FileLoader import FileLoader
 from data.PandasModel import PandasModel
 from data.DataFrame import DataFrame
 from gui.Histogram import Histogram
+from metrics.Metrics import Metrics
+from gui.AddObject import AddObject
 
 class Ui_MainWindow(object):
 
@@ -35,8 +37,8 @@ class Ui_MainWindow(object):
         self.menuFile.setObjectName("menuFile")
         self.menuEdit = QtWidgets.QMenu(self.menubar)
         self.menuEdit.setObjectName("menuEdit")
-        self.menuWy_wietl = QtWidgets.QMenu(self.menubar)
-        self.menuWy_wietl.setObjectName("menuWy_wietl")
+        self.menuWyswietl = QtWidgets.QMenu(self.menubar)
+        self.menuWyswietl.setObjectName("menuWyswietl")
         self.menuWykresy = QtWidgets.QMenu(self.menubar)
         self.menuWykresy.setObjectName("menuWykresy")
         MainWindow.setMenuBar(self.menubar)
@@ -61,18 +63,21 @@ class Ui_MainWindow(object):
         self.action2D.setObjectName("action2D")
         self.action3D = QtWidgets.QAction(MainWindow)
         self.action3D.setObjectName("action3D")
+        self.actionAddObject = QtWidgets.QAction(MainWindow)
+        self.actionAddObject.setObjectName("actionAddObject")
         self.menuFile.addAction(self.actionLoad_data)
+        self.menuFile.addAction(self.actionAddObject)
         self.menuEdit.addAction(self.actionChangeValOnNUmber)
         self.menuEdit.addAction(self.actionDiscretize)
         self.menuEdit.addAction(self.actionNorm)
         self.menuEdit.addAction(self.actionChangeRange)
-        self.menuWy_wietl.addAction(self.actionSubset)
+        self.menuWyswietl.addAction(self.actionSubset)
         self.menuWykresy.addAction(self.actionHistogram)
         self.menuWykresy.addAction(self.action2D)
         self.menuWykresy.addAction(self.action3D)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuEdit.menuAction())
-        self.menubar.addAction(self.menuWy_wietl.menuAction())
+        self.menubar.addAction(self.menuWyswietl.menuAction())
         self.menubar.addAction(self.menuWykresy.menuAction())
 
         self.actionLoad_data.triggered.connect(lambda: self.openDialogLoad())
@@ -84,6 +89,7 @@ class Ui_MainWindow(object):
         self.actionHistogram.triggered.connect(lambda: self.open_hist_dialog())
         self.action2D.triggered.connect(lambda: self.open2d_dialog())
         self.action3D.triggered.connect(lambda: self.open3d_dialog())
+        self.actionAddObject.triggered.connect(lambda: self.new_object_dialog())
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -93,7 +99,7 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.menuFile.setTitle(_translate("MainWindow", "Plik"))
         self.menuEdit.setTitle(_translate("MainWindow", "Edycja"))
-        self.menuWy_wietl.setTitle(_translate("MainWindow", "Wyświetl"))
+        self.menuWyswietl.setTitle(_translate("MainWindow", "Wyświetl"))
         self.menuWykresy.setTitle(_translate("MainWindow", "Wykresy"))
         self.actionLoad_data.setText(_translate("MainWindow", "Wczytaj dane"))
         self.actionChangeValOnNUmber.setText(_translate("MainWindow", "Zmień na dane numeryczne"))
@@ -104,6 +110,7 @@ class Ui_MainWindow(object):
         self.actionHistogram.setText(_translate("MainWindow", "Histogram"))
         self.action2D.setText(_translate("MainWindow", "Wykres 2D"))
         self.action3D.setText(_translate("MainWindow", "Wykres 3D"))
+        self.actionAddObject.setText(_translate("MainWindow", "Dodaj obiekt"))
 
         
 
@@ -173,6 +180,29 @@ class Ui_MainWindow(object):
         self.ui_plot3d.comboBoxClass.addItems(self.data_frame.df.columns)
         self.plot3d_dialog.show()
         self.ui_plot3d.okButton.clicked.connect(lambda: self.draw_plot_3d())
+
+    def new_object_dialog(self):
+        self.new_object_dialog = QtWidgets.QDialog()
+        self.ui_new_obj = AddObject()
+        self.ui_new_obj.setupUi(self.new_object_dialog)
+        self.new_object_dialog.show()
+        self.ui_new_obj.okButton.clicked.connect(lambda: self.add_new_object())
+
+    def add_new_object(self):
+        k = int(self.ui_new_obj.K_value.text())
+        values = self.ui_new_obj.newValues.text()
+        if self.ui_new_obj.euklidianRadio.isChecked():
+            object_class = Metrics.euclidean_distance(values, self.data_frame.df, k)
+        elif self.ui_new_obj.manhattanRadio.isChecked():
+            object_class = Metrics.manhattan_distance(values, self.data_frame.df, k)
+        elif self.ui_new_obj.chebyshevRadio.isChecked():
+            object_class = Metrics.chebyshev_distance(values, self.data_frame.df, k)
+        elif self.ui_new_obj.mahalanobisRadio.isChecked():
+            metric = 4
+
+        self.data_frame.append(values, object_class)
+        self.setup_table(self.data_frame.df)
+
 
     def show_hist(self):
         column = self.ui_hist.comboBoxColumn.currentText()
@@ -254,6 +284,8 @@ class Ui_MainWindow(object):
         col = self.ui_num.comboBoxColumn.currentText()
         is_alpha = self.ui_num.radioButtonAlpha.isChecked()
         self.data_frame.change_to_number(col, is_alpha)
+        metrics: Metrics = Metrics(len(self.data_frame.df.index), self.data_frame.df)
+        metrics.calculate_chebyshev(len(self.data_frame.df.index))
         self.close_num_dialog()
         print(self.data_frame.df.columns)
 
