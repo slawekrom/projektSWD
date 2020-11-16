@@ -212,7 +212,7 @@ class Ui_MainWindow(object):
         elif self.ui_classify.chebyshevRadio.isChecked():
             metrics.classify_chebyshev()
         elif self.ui_classify.mahalanobisRadio.isChecked():
-            metric = 4
+            metrics.classify_mahalanobis()
 
         self.close_classify_dialog()
 
@@ -226,7 +226,7 @@ class Ui_MainWindow(object):
         elif self.ui_new_obj.chebyshevRadio.isChecked():
             object_class = Metrics.chebyshev_distance(values, self.data_frame.df, k)
         elif self.ui_new_obj.mahalanobisRadio.isChecked():
-            metric = 4
+            object_class = Metrics.mahalanobis_distance(values, self.data_frame.df, k)
 
         self.data_frame.append(values, object_class)
         self.setup_table(self.data_frame.df)

@@ -2,6 +2,8 @@ import math
 import numpy as np
 from collections import Counter
 from metrics.Distance import Distance
+from scipy import linalg
+
 
 class Metrics:
 
@@ -9,6 +11,7 @@ class Metrics:
         self.euclidean_distance = [[0 for i in range(size)] for j in range(size)]
         self.manhattan_distance = [[0 for i in range(size)] for j in range(size)]
         self.chebyshev_distance = [[0 for i in range(size)] for j in range(size)]
+        self.mahalanobis_distance = [[0 for i in range(size)] for j in range(size)]
         self.df = dataframe
         self.size = size
 
@@ -142,6 +145,56 @@ class Metrics:
         # for row in self.chebyshev_distance:
         #     print(row)
 
+
+    def calculate_mahalanobis(self):
+        column_count = len(self.df.columns)
+        columns = []
+        columns = self.df.columns
+        cov = self.df.cov().to_numpy()
+        inv_cov = linalg.inv(cov)
+        for i in range(self.size):
+            for j in range(i):
+                first = []
+                second = []
+                for k in range(column_count - 1):
+                    first.append(self.df.at[i, columns[k]])
+                    second.append(self.df.at[j, columns[k]])
+                subtract = np.subtract(first, second)
+                subtract_t = subtract.T
+                multiply = subtract_t.dot(inv_cov).dot(subtract)
+                distance: Distance = Distance(multiply, i, j)
+                self.mahalanobis_distance[i][j] = distance
+        print(self.mahalanobis_distance)
+
+
+    def classify_mahalanobis(self):
+        self.calculate_mahalanobis()
+        counter: Counter
+        columns = []
+        columns = self.df.columns
+        print('\n')
+        k_classify = [0] * (self.size - 1)
+        for i in range(self.size):  # i to wiersz danych
+            distance_list = [row[i] for row in self.mahalanobis_distance]
+            distance_list = distance_list[i + 1: self.size] + self.mahalanobis_distance[i][0:i]
+            distance_list.sort(key=lambda x: x.distance, reverse=False)
+            list_of_knn = list()
+            test_object_class = self.df.at[i, columns[len(self.df.columns) - 1]]
+            for k in range(self.size - 1):  # k najblizszych
+                if distance_list[k].index1 == i:
+                    w = distance_list[k].index2
+                else:
+                    w = distance_list[k].index1
+                list_of_knn.append(self.df.at[w, columns[len(self.df.columns) - 1]])
+                if len(list_of_knn) == k + 1:
+                    counter = Counter(([element for element in list_of_knn]))
+                    if counter.most_common(1)[0][0] == test_object_class:
+                        k_classify[k] += 1
+
+        for n in range(len(k_classify)):
+            k_classify[n] = round(k_classify[n] / self.size, 2)
+        print(k_classify)
+
     @staticmethod
     def manhattan_distance(values: str, df, k: int):
         values_array = np.array(values.split(" ")).astype(np.float)
@@ -217,3 +270,30 @@ class Metrics:
         print(counter.most_common(1)[0][0])
         return counter.most_common(1)[0][0]
 
+    @staticmethod
+    def mahalanobis_distance(values: str, df, k: int):
+        values_array_first = np.array(values.split(" ")).astype(np.float)
+        column_count = len(df.columns)
+        columns = df.columns
+        distance = dict()
+        cov = df.cov().to_numpy()
+        inv_cov = linalg.inv(cov)
+        for j in range(len(df.index)):
+            values_array_second = []
+            for n in range(column_count - 1):
+                values_array_second.append(df.at[j, columns[n]])
+            subtract = np.subtract(values_array_first, values_array_second)
+            subtract_t = subtract.T
+            multiply = subtract_t.dot(inv_cov).dot(subtract)
+            distance[j] = multiply
+
+        print(distance)
+        list_of_knn = list()
+        for w in sorted(distance, key=distance.get, reverse=False):
+            list_of_knn.append(df.at[w, columns[len(df.columns) - 1]])
+            if len(list_of_knn) == k:
+                break
+        print(list_of_knn)
+        counter: Counter = Counter(([element for element in list_of_knn]))
+        print(counter.most_common(1)[0][0])
+        return counter.most_common(1)[0][0]
