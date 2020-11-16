@@ -50,7 +50,8 @@ class Metrics:
                     if counter.most_common(1)[0][0] == test_object_class:
                         k_classify[k] +=1
 
-
+        for n in range(len(k_classify)):
+            k_classify[n] = round(k_classify[n] / self.size, 2)
         print(k_classify)
 
     def classify_manhattan(self):
@@ -77,7 +78,8 @@ class Metrics:
                     if counter.most_common(1)[0][0] == test_object_class:
                         k_classify[k] +=1
 
-
+        for n in range(len(k_classify)):
+            k_classify[n] = round(k_classify[n] / self.size, 2)
         print(k_classify)
 
     def classify_chebyshev(self):
@@ -104,7 +106,8 @@ class Metrics:
                     if counter.most_common(1)[0][0] == test_object_class:
                         k_classify[k] +=1
 
-
+        for n in range(len(k_classify)):
+            k_classify[n] = round(k_classify[n] / self.size, 2)
         print(k_classify)
 
     def calculate_manhattan(self):
