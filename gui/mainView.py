@@ -16,6 +16,7 @@ from data.DataFrame import DataFrame
 from gui.Histogram import Histogram
 from metrics.Metrics import Metrics
 from gui.AddObject import AddObject
+from gui.ClassifyDialog import ClassifyDialog
 
 class Ui_MainWindow(object):
 
@@ -65,8 +66,11 @@ class Ui_MainWindow(object):
         self.action3D.setObjectName("action3D")
         self.actionAddObject = QtWidgets.QAction(MainWindow)
         self.actionAddObject.setObjectName("actionAddObject")
+        self.actionClassify = QtWidgets.QAction(MainWindow)
+        self.actionClassify.setObjectName("actionClassify")
         self.menuFile.addAction(self.actionLoad_data)
         self.menuFile.addAction(self.actionAddObject)
+        self.menuFile.addAction(self.actionClassify)
         self.menuEdit.addAction(self.actionChangeValOnNUmber)
         self.menuEdit.addAction(self.actionDiscretize)
         self.menuEdit.addAction(self.actionNorm)
@@ -89,7 +93,8 @@ class Ui_MainWindow(object):
         self.actionHistogram.triggered.connect(lambda: self.open_hist_dialog())
         self.action2D.triggered.connect(lambda: self.open2d_dialog())
         self.action3D.triggered.connect(lambda: self.open3d_dialog())
-        self.actionAddObject.triggered.connect(lambda: self.new_object_dialog())
+        self.actionAddObject.triggered.connect(lambda: self.newobject_dialog())
+        self.actionClassify.triggered.connect(lambda: self.classifyDialog())
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -111,6 +116,7 @@ class Ui_MainWindow(object):
         self.action2D.setText(_translate("MainWindow", "Wykres 2D"))
         self.action3D.setText(_translate("MainWindow", "Wykres 3D"))
         self.actionAddObject.setText(_translate("MainWindow", "Dodaj obiekt"))
+        self.actionClassify.setText(_translate("MainWindow", "Klasyfikacja"))
 
         
 
@@ -181,12 +187,34 @@ class Ui_MainWindow(object):
         self.plot3d_dialog.show()
         self.ui_plot3d.okButton.clicked.connect(lambda: self.draw_plot_3d())
 
-    def new_object_dialog(self):
+    def newobject_dialog(self):
         self.new_object_dialog = QtWidgets.QDialog()
         self.ui_new_obj = AddObject()
         self.ui_new_obj.setupUi(self.new_object_dialog)
         self.new_object_dialog.show()
         self.ui_new_obj.okButton.clicked.connect(lambda: self.add_new_object())
+        # metrics: Metrics = Metrics(len(self.data_frame.df.index), self.data_frame.df)
+        # metrics.classify_euclidean()
+
+    def classifyDialog(self):
+        self.classify_dialog = QtWidgets.QDialog()
+        self.ui_classify = ClassifyDialog()
+        self.ui_classify.setupUi(self.classify_dialog)
+        self.classify_dialog.show()
+        self.ui_classify.okButton.clicked.connect(lambda: self.classify())
+
+    def classify(self):
+        metrics: Metrics = Metrics(len(self.data_frame.df.index), self.data_frame.df)
+        if self.ui_classify.euklidianRadio.isChecked():
+            metrics.classify_euclidean()
+        elif self.ui_classify.manhattanRadio.isChecked():
+            metrics.classify_manhattan()
+        elif self.ui_classify.chebyshevRadio.isChecked():
+            metrics.classify_chebyshev()
+        elif self.ui_classify.mahalanobisRadio.isChecked():
+            metric = 4
+
+        self.close_classify_dialog()
 
     def add_new_object(self):
         k = int(self.ui_new_obj.K_value.text())
@@ -202,6 +230,7 @@ class Ui_MainWindow(object):
 
         self.data_frame.append(values, object_class)
         self.setup_table(self.data_frame.df)
+        self.close_add_new_object_dialog()
 
 
     def show_hist(self):
@@ -284,8 +313,8 @@ class Ui_MainWindow(object):
         col = self.ui_num.comboBoxColumn.currentText()
         is_alpha = self.ui_num.radioButtonAlpha.isChecked()
         self.data_frame.change_to_number(col, is_alpha)
-        metrics: Metrics = Metrics(len(self.data_frame.df.index), self.data_frame.df)
-        metrics.calculate_chebyshev(len(self.data_frame.df.index))
+        #metrics: Metrics = Metrics(len(self.data_frame.df.index), self.data_frame.df)
+        #metrics.calculate_chebyshev(len(self.data_frame.df.index))
         self.close_num_dialog()
         print(self.data_frame.df.columns)
 
@@ -352,6 +381,12 @@ class Ui_MainWindow(object):
 
     def close_hist_dialog(self):
         self.hist_dialog.close()
+
+    def close_add_new_object_dialog(self):
+        self.new_object_dialog.close()
+
+    def close_classify_dialog(self):
+        self.classify_dialog.close()
 
     def setup_table(self, df):
         self.pandas_model: PandasModel = PandasModel(df)
