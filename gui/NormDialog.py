@@ -1,6 +1,9 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+
 class NormDialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
@@ -10,7 +13,7 @@ class NormDialog(object):
         font = QtGui.QFont()
         font.setPointSize(12)
         self.comboBoxColumn.setFont(font)
-        self.comboBoxColumn.setObjectName("comboBoxColumn")
+        self.comboBoxColumn.setObjectName("comboBox")
         self.label = QtWidgets.QLabel(Dialog)
         self.label.setGeometry(QtCore.QRect(50, 10, 91, 31))
         font = QtGui.QFont()
@@ -26,6 +29,12 @@ class NormDialog(object):
         self.okButton = QtWidgets.QPushButton(Dialog)
         self.okButton.setGeometry(QtCore.QRect(230, 260, 91, 31))
         self.okButton.setObjectName("okButton")
+        self.checkBoxNormalizeAll = QtWidgets.QCheckBox(Dialog)
+        self.checkBoxNormalizeAll.setGeometry(QtCore.QRect(60, 100, 201, 17))
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.checkBoxNormalizeAll.setFont(font)
+        self.checkBoxNormalizeAll.setObjectName("checkBoxNormalizeAll")
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -36,3 +45,4 @@ class NormDialog(object):
         self.label.setText(_translate("Dialog", "Kolumna"))
         self.cancelButton.setText(_translate("Dialog", "Anuluj"))
         self.okButton.setText(_translate("Dialog", "OK"))
+        self.checkBoxNormalizeAll.setText(_translate("Dialog", "Normalizuj wszystkie atrybuty"))

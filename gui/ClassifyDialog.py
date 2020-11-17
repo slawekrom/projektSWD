@@ -29,6 +29,12 @@ class ClassifyDialog(object):
         self.okButton = QtWidgets.QPushButton(Dialog)
         self.okButton.setGeometry(QtCore.QRect(50, 230, 75, 23))
         self.okButton.setObjectName("okButton")
+        self.checkBoxNormalize = QtWidgets.QCheckBox(Dialog)
+        self.checkBoxNormalize.setGeometry(QtCore.QRect(40, 190, 241, 17))
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.checkBoxNormalize.setFont(font)
+        self.checkBoxNormalize.setObjectName("checkBoxNormalize")
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -43,3 +49,4 @@ class ClassifyDialog(object):
         self.mahalanobisRadio.setText(_translate("Dialog", "Mahalanobisa"))
         self.cancelButton.setText(_translate("Dialog", "Anuluj"))
         self.okButton.setText(_translate("Dialog", "OK"))
+        self.checkBoxNormalize.setText(_translate("Dialog", "Klasyfikuj wartości znormalizowane"))

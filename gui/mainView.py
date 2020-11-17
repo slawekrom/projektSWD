@@ -191,6 +191,12 @@ class Ui_MainWindow(object):
         self.new_object_dialog = QtWidgets.QDialog()
         self.ui_new_obj = AddObject()
         self.ui_new_obj.setupUi(self.new_object_dialog)
+        # columns_list = self.data_frame.df.columns
+        # columns_list = columns_list[0: len(columns_list)]
+        # column_label: str = ''
+        # for element in columns_list:
+        #     column_label.join(element)
+        # self.ui_new_obj.Attributeslabel.setText(column_label)
         self.new_object_dialog.show()
         self.ui_new_obj.okButton.clicked.connect(lambda: self.add_new_object())
         # metrics: Metrics = Metrics(len(self.data_frame.df.index), self.data_frame.df)
@@ -206,13 +212,25 @@ class Ui_MainWindow(object):
     def classify(self):
         metrics: Metrics = Metrics(len(self.data_frame.df.index), self.data_frame.df)
         if self.ui_classify.euklidianRadio.isChecked():
-            metrics.classify_euclidean()
+            if self.ui_classify.checkBoxNormalize.isChecked():
+                metrics.classify_euclidean_normalize()
+            else:
+                metrics.classify_euclidean()
         elif self.ui_classify.manhattanRadio.isChecked():
-            metrics.classify_manhattan()
+            if self.ui_classify.checkBoxNormalize.isChecked():
+                metrics.classify_manhattan_normalize()
+            else:
+                metrics.classify_manhattan()
         elif self.ui_classify.chebyshevRadio.isChecked():
-            metrics.classify_chebyshev()
+            if self.ui_classify.checkBoxNormalize.isChecked():
+                metrics.classify_chebyshev_normalize()
+            else:
+                metrics.classify_chebyshev()
         elif self.ui_classify.mahalanobisRadio.isChecked():
-            metrics.classify_mahalanobis()
+            if self.ui_classify.checkBoxNormalize.isChecked():
+                metrics.classify_mahalanobis_normalize()
+            else:
+                metrics.classify_mahalanobis()
 
         self.close_classify_dialog()
 
@@ -328,7 +346,10 @@ class Ui_MainWindow(object):
 
     def normalize(self):
         col = self.ui_norm.comboBoxColumn.currentText()
-        self.data_frame.normalize(col)
+        if self.ui_norm.checkBoxNormalizeAll.isChecked():
+            self.data_frame.normalize_all()
+        else:
+            self.data_frame.normalize(col)
         self.setup_table(self.data_frame.df)
         self.close_norm_dialog()
 
