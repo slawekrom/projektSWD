@@ -320,13 +320,14 @@ class Metrics:
         columns = columns[column_count + 1: len(self.df.columns)]
         cov = self.df[self.df.select_dtypes(['float', 'int']).columns.tolist()[column_count:]].cov().to_numpy()
         inv_cov = linalg.inv(cov)
+        copy_df = self.df[self.df.select_dtypes(['float', 'int']).columns.tolist()]
         for i in range(self.size):
             for j in range(i):
                 first = []
                 second = []
                 for k in range(column_count):
-                    first.append(self.df[self.df.select_dtypes(['float', 'int']).columns.tolist()].at[i, columns[k]])
-                    second.append(self.df[self.df.select_dtypes(['float', 'int']).columns.tolist()].at[j, columns[k]])
+                    first.append(copy_df.at[i, columns[k]])
+                    second.append(copy_df.at[j, columns[k]])
                 subtract = np.subtract(first, second)
                 subtract_t = subtract.T
                 multiply = subtract_t.dot(inv_cov).dot(subtract)
