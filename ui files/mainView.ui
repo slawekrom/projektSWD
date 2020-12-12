@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>965</width>
+    <height>664</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QTableView" name="tableView">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>921</width>
+      <height>621</height>
+     </rect>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>965</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>Plik</string>
+    </property>
+    <addaction name="actionLoad_data"/>
+    <addaction name="actionAddObject"/>
+    <addaction name="actionClassify"/>
+   </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edycja</string>
+    </property>
+    <addaction name="actionChangeValOnNUmber"/>
+    <addaction name="actionDiscretize"/>
+    <addaction name="actionNorm"/>
+    <addaction name="actionChangeRange"/>
+   </widget>
+   <widget class="QMenu" name="menuWy_wietl">
+    <property name="title">
+     <string>Wyświetl</string>
+    </property>
+    <addaction name="actionSubset"/>
+   </widget>
+   <widget class="QMenu" name="menuWykresy">
+    <property name="title">
+     <string>Wykresy</string>
+    </property>
+    <addaction name="actionHistogram"/>
+    <addaction name="action2D"/>
+    <addaction name="action3D"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
+   <addaction name="menuWy_wietl"/>
+   <addaction name="menuWykresy"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionLoad_data">
+   <property name="text">
+    <string>Wczytaj dane</string>
+   </property>
+  </action>
+  <action name="actionChangeValOnNUmber">
+   <property name="text">
+    <string>Zmień na dane numeryczne</string>
+   </property>
+  </action>
+  <action name="actionDiscretize">
+   <property name="text">
+    <string>Dyskretyzacja</string>
+   </property>
+  </action>
+  <action name="actionNorm">
+   <property name="text">
+    <string>Normalizacja</string>
+   </property>
+  </action>
+  <action name="actionChangeRange">
+   <property name="text">
+    <string>Zmiana przedziału</string>
+   </property>
+  </action>
+  <action name="actionSubset">
+   <property name="text">
+    <string>Procent największych/najniejszych</string>
+   </property>
+  </action>
+  <action name="actionHistogram">
+   <property name="text">
+    <string>Histogram</string>
+   </property>
+  </action>
+  <action name="action2D">
+   <property name="text">
+    <string>Wykres 2D</string>
+   </property>
+  </action>
+  <action name="action3D">
+   <property name="text">
+    <string>Wykres 3D</string>
+   </property>
+  </action>
+  <action name="actionAddObject">
+   <property name="text">
+    <string>Dodaj obiekt</string>
+   </property>
+  </action>
+  <action name="actionClassify">
+   <property name="text">
+    <string>Klasyfikacja</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
