@@ -1,4 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+
+from gui.GroupDialog import GroupDialog
 from gui.openFileDialog import OpenFileDialog
 from gui.NumDialog import NumDialog
 from gui.DiscretizeDialog import DiscretizeDialog
@@ -68,9 +70,12 @@ class Ui_MainWindow(object):
         self.actionAddObject.setObjectName("actionAddObject")
         self.actionClassify = QtWidgets.QAction(MainWindow)
         self.actionClassify.setObjectName("actionClassify")
+        self.actionGroup = QtWidgets.QAction(MainWindow)
+        self.actionGroup.setObjectName("actionGroup")
         self.menuFile.addAction(self.actionLoad_data)
         self.menuFile.addAction(self.actionAddObject)
         self.menuFile.addAction(self.actionClassify)
+        self.menuFile.addAction(self.actionGroup)
         self.menuEdit.addAction(self.actionChangeValOnNUmber)
         self.menuEdit.addAction(self.actionDiscretize)
         self.menuEdit.addAction(self.actionNorm)
@@ -95,6 +100,7 @@ class Ui_MainWindow(object):
         self.action3D.triggered.connect(lambda: self.open3d_dialog())
         self.actionAddObject.triggered.connect(lambda: self.newobject_dialog())
         self.actionClassify.triggered.connect(lambda: self.classifyDialog())
+        self.actionGroup.triggered.connect(lambda: self.groupDialog())
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -117,8 +123,7 @@ class Ui_MainWindow(object):
         self.action3D.setText(_translate("MainWindow", "Wykres 3D"))
         self.actionAddObject.setText(_translate("MainWindow", "Dodaj obiekt"))
         self.actionClassify.setText(_translate("MainWindow", "Klasyfikacja"))
-
-        
+        self.actionGroup.setText(_translate("MainWindow", "Grupowanie"))
 
     def openDialogLoad(self):
         self.open_file_dialog = QtWidgets.QDialog()
@@ -209,6 +214,12 @@ class Ui_MainWindow(object):
         self.classify_dialog.show()
         self.ui_classify.okButton.clicked.connect(lambda: self.classify())
 
+    def groupDialog(self):
+        self.group_dialog = GroupDialog(self.data_frame)
+        self.group_dialog.show()
+        self.group_dialog.ok_button.clicked.connect(lambda: self.group())
+        self.group_dialog.cancel_button.clicked.connect(lambda: self.group_dialog.close())
+
     def classify(self):
         metrics: Metrics = Metrics(len(self.data_frame.df.index), self.data_frame.df)
         if self.ui_classify.euklidianRadio.isChecked():
@@ -233,6 +244,9 @@ class Ui_MainWindow(object):
                 metrics.classify_mahalanobis()
 
         self.close_classify_dialog()
+
+    def group(self):
+        pass
 
     def add_new_object(self):
         k = int(self.ui_new_obj.K_value.text())
