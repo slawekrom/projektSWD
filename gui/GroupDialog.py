@@ -1,6 +1,8 @@
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QSpinBox, QHBoxLayout, QLabel, QPushButton, QComboBox
 
+from gui.Method import Method
+
 
 class GroupDialog(QDialog):
     def __init__(self, data_frame):
@@ -17,6 +19,8 @@ class GroupDialog(QDialog):
         self.layout.addItem(self.columns_layout)
         self.__create_class_layout()
         self.layout.addItem(self.class_layout)
+        self.__create_method_layout()
+        self.layout.addItem(self.method_layout)
         self.__add_footer()
         self.setLayout(self.layout)
 
@@ -47,3 +51,12 @@ class GroupDialog(QDialog):
         self.footer_layout.addWidget(self.ok_button)
         self.footer_layout.addWidget(self.cancel_button)
         self.layout.addItem(self.footer_layout)
+
+    def __create_method_layout(self):
+        self.method_layout = QHBoxLayout()
+        self.method_combobox = QComboBox()
+        for method in Method:
+            self.method_combobox.addItem(method.name)
+        self.method_label = QLabel("Method: ")
+        self.method_layout.addWidget(self.method_label)
+        self.method_layout.addWidget(self.method_combobox)

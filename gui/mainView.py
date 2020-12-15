@@ -1,6 +1,13 @@
+import math
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+from pandas import np
+import pandas as pd
+
+from scipy import linalg
 
 from gui.GroupDialog import GroupDialog
+from gui.Method import Method
 from gui.openFileDialog import OpenFileDialog
 from gui.NumDialog import NumDialog
 from gui.DiscretizeDialog import DiscretizeDialog
@@ -20,10 +27,12 @@ from metrics.Metrics import Metrics
 from gui.AddObject import AddObject
 from gui.ClassifyDialog import ClassifyDialog
 
+
 class Ui_MainWindow(object):
 
     def __init__(self):
         self.data_frame = DataFrame()
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(965, 664)
@@ -246,7 +255,66 @@ class Ui_MainWindow(object):
         self.close_classify_dialog()
 
     def group(self):
-        pass
+        class_name = self.group_dialog.columns_combobox.currentText()
+        k = self.group_dialog.class_number.value()
+        centroids = self.data_frame.df.sample(k)
+        centroids = centroids.drop(class_name, axis=1)
+        method = self.group_dialog.method_combobox.currentText()
+        while True:
+            distances = []
+            if method == Method.mahalanobis.name:
+                for c in centroids.iloc:
+                    distances.append(self.mahalanobis_distance(
+                        ' '.join(
+                            [str(c[column]) for column in self.data_frame.df.columns.tolist() if column != class_name])
+                        , self.data_frame.df
+                    ))
+            if method == Method.mahalanobis.name:
+                for c in centroids.iloc:
+                    distances.append(self.mahalanobis_distance(
+                        ' '.join([str(c[column]) for column in self.data_frame.df.columns.tolist() if column != class_name])
+                        , self.data_frame.df
+                    ))
+            if method == Method.euclidean.name:
+                for c in centroids.iloc:
+                    distances.append(self.euclidean_distance(
+                        ' '.join([str(c[column]) for column in self.data_frame.df.columns.tolist() if column != class_name])
+                        , self.data_frame.df
+                    ))
+            if method == Method.chebyshev.name:
+                for c in centroids.iloc:
+                    distances.append(self.chebyshev_distance(
+                        ' '.join([str(c[column]) for column in self.data_frame.df.columns.tolist() if column != class_name])
+                        , self.data_frame.df
+                    ))
+
+            groups = [[] for cu in range(k)]
+            for i, distance in enumerate(distances[0]):
+                min_value = distances[0][i]
+                index = 0
+                for row in range(len(distances)):
+                    if distances[row][i] < min_value:
+                        index = row
+                        min_value = distances[row][i]
+                groups[index].append(i)
+            data = []
+            for group in groups:
+                group_zero = self.data_frame.df.iloc[group]
+                means = {}
+                for c in self.data_frame.df.columns.tolist():
+                    if c != class_name:
+                        means[c] = group_zero[c].mean()
+                data.append(means)
+            temp = pd.DataFrame(data)
+            classes = []
+            if centroids.equals(temp):
+                for i in self.data_frame.df.index.tolist():
+                    for g, c in enumerate(groups):
+                        if i in c:
+                            classes.append(g + 1)
+                self.group_dialog.close()
+                break
+            centroids = temp
 
     def add_new_object(self):
         k = int(self.ui_new_obj.K_value.text())
@@ -263,7 +331,6 @@ class Ui_MainWindow(object):
         self.data_frame.append(values, object_class)
         self.setup_table(self.data_frame.df)
         self.close_add_new_object_dialog()
-
 
     def show_hist(self):
         column = self.ui_hist.comboBoxColumn.currentText()
@@ -345,8 +412,8 @@ class Ui_MainWindow(object):
         col = self.ui_num.comboBoxColumn.currentText()
         is_alpha = self.ui_num.radioButtonAlpha.isChecked()
         self.data_frame.change_to_number(col, is_alpha)
-        #metrics: Metrics = Metrics(len(self.data_frame.df.index), self.data_frame.df)
-        #metrics.calculate_chebyshev(len(self.data_frame.df.index))
+        # metrics: Metrics = Metrics(len(self.data_frame.df.index), self.data_frame.df)
+        # metrics.calculate_chebyshev(len(self.data_frame.df.index))
         self.close_num_dialog()
         print(self.data_frame.df.columns)
 
@@ -427,8 +494,68 @@ class Ui_MainWindow(object):
         self.pandas_model: PandasModel = PandasModel(df)
         self.tableView.setModel(self.pandas_model)
 
+    def manhattan_distance(self, values: str, df):
+        values_array = np.array(values.split(" ")).astype(np.float)
+        column_count = len(df.columns)
+        columns = []
+        columns = df.columns
+        distance = dict()
+        for j in range(len(df.index)):
+            sum = 0
+            for n in range(column_count - 1):
+                sum += math.fabs(values_array[n] - df.at[j, columns[n]])
+            distance[j] = sum
+        return distance
+
+    def euclidean_distance(self, values: str, df):
+        values_array = np.array(values.split(" ")).astype(np.float)
+        column_count = len(df.columns)
+        columns = []
+        columns = df.columns
+        distance = dict()
+        for j in range(len(df.index)):
+            sum = 0
+            for n in range(column_count - 1):
+                sum += math.pow((values_array[n] - df.at[j, columns[n]]), 2)
+            distance[j] = math.sqrt(sum)
+
+        return distance
+
+    def chebyshev_distance(self, values: str, df):
+        values_array = np.array(values.split(" ")).astype(np.float)
+        column_count = len(df.columns)
+        columns = []
+        columns = df.columns
+        distance = dict()
+        for j in range(len(df.index)):
+            sum = 0
+            for n in range(column_count - 1):
+                if math.fabs(values_array[n] - df.at[j, columns[n]]) > sum:
+                    sum = math.fabs(values_array[n] - df.at[j, columns[n]])
+            distance[j] = sum
+        return distance
+
+    def mahalanobis_distance(self, values: str, df):
+        values_array_first = np.array(values.split(" ")).astype(np.float)
+        column_count = len(df.columns)
+        columns = df.columns
+        distance = dict()
+        cov = df.cov().to_numpy()
+        inv_cov = linalg.inv(cov)
+        for j in range(len(df.index)):
+            values_array_second = []
+            for n in range(column_count - 1):
+                values_array_second.append(df.at[j, columns[n]])
+            subtract = np.subtract(values_array_first, values_array_second)
+            subtract_t = subtract.T
+            multiply = subtract_t.dot(inv_cov).dot(subtract)
+            distance[j] = multiply
+        return distance
+
+
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
