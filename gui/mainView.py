@@ -262,9 +262,9 @@ class Ui_MainWindow(object):
         method = self.group_dialog.method_combobox.currentText()
         while True:
             distances = []
-            if method == Method.mahalanobis.name:
+            if method == Method.manhattan.name:
                 for c in centroids.iloc:
-                    distances.append(self.mahalanobis_distance(
+                    distances.append(self.manhattan_distance(
                         ' '.join(
                             [str(c[column]) for column in self.data_frame.df.columns.tolist() if column != class_name])
                         , self.data_frame.df
@@ -312,6 +312,7 @@ class Ui_MainWindow(object):
                     for g, c in enumerate(groups):
                         if i in c:
                             classes.append(g + 1)
+                self.data_frame.df.insert(2, "Groups: " + class_name, classes, True)
                 self.group_dialog.close()
                 break
             centroids = temp
