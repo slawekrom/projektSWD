@@ -1,6 +1,7 @@
 import math
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMessageBox
 from pandas import np
 import pandas as pd
 
@@ -8,6 +9,8 @@ from scipy import linalg
 
 from gui.GroupDialog import GroupDialog
 from gui.Method import Method
+from gui.Similarity import Similarity
+from gui.SimilarityDialog import SimilarityDialog
 from gui.openFileDialog import OpenFileDialog
 from gui.NumDialog import NumDialog
 from gui.DiscretizeDialog import DiscretizeDialog
@@ -81,10 +84,13 @@ class Ui_MainWindow(object):
         self.actionClassify.setObjectName("actionClassify")
         self.actionGroup = QtWidgets.QAction(MainWindow)
         self.actionGroup.setObjectName("actionGroup")
+        self.actionSimilarity = QtWidgets.QAction(MainWindow)
+        self.actionSimilarity.setObjectName("actionSimilarity")
         self.menuFile.addAction(self.actionLoad_data)
         self.menuFile.addAction(self.actionAddObject)
         self.menuFile.addAction(self.actionClassify)
         self.menuFile.addAction(self.actionGroup)
+        self.menuFile.addAction(self.actionSimilarity)
         self.menuEdit.addAction(self.actionChangeValOnNUmber)
         self.menuEdit.addAction(self.actionDiscretize)
         self.menuEdit.addAction(self.actionNorm)
@@ -110,6 +116,7 @@ class Ui_MainWindow(object):
         self.actionAddObject.triggered.connect(lambda: self.newobject_dialog())
         self.actionClassify.triggered.connect(lambda: self.classifyDialog())
         self.actionGroup.triggered.connect(lambda: self.groupDialog())
+        self.actionSimilarity.triggered.connect(lambda: self.similarityDialog())
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -133,6 +140,7 @@ class Ui_MainWindow(object):
         self.actionAddObject.setText(_translate("MainWindow", "Dodaj obiekt"))
         self.actionClassify.setText(_translate("MainWindow", "Klasyfikacja"))
         self.actionGroup.setText(_translate("MainWindow", "Grupowanie"))
+        self.actionSimilarity.setText(_translate("MainWindow", "Miara podobienstwa"))
 
     def openDialogLoad(self):
         self.open_file_dialog = QtWidgets.QDialog()
@@ -229,6 +237,12 @@ class Ui_MainWindow(object):
         self.group_dialog.ok_button.clicked.connect(lambda: self.group())
         self.group_dialog.cancel_button.clicked.connect(lambda: self.group_dialog.close())
 
+    def similarityDialog(self):
+        self.similarity_dialog = SimilarityDialog(self.data_frame)
+        self.similarity_dialog.show()
+        self.similarity_dialog.ok_button.clicked.connect(lambda: self.similarity())
+        self.similarity_dialog.cancel_button.clicked.connect(lambda: self.similarity_dialog.close())
+
     def classify(self):
         metrics: Metrics = Metrics(len(self.data_frame.df.index), self.data_frame.df)
         if self.ui_classify.euklidianRadio.isChecked():
@@ -312,10 +326,27 @@ class Ui_MainWindow(object):
                     for g, c in enumerate(groups):
                         if i in c:
                             classes.append(g + 1)
-                self.data_frame.df.insert(2, "Groups: " + class_name, classes, True)
+                self.data_frame.df.insert(len(self.data_frame.df.columns) - 1, "Groups: " + class_name, classes, True)
+                self.setup_table(self.data_frame.df)
                 self.group_dialog.close()
                 break
             centroids = temp
+
+    def similarity(self):
+        first_class = self.similarity_dialog.first_column_combobox.currentText()
+        second_class = self.similarity_dialog.second_column_combobox.currentText()
+        method = self.similarity_dialog.method_combobox.currentText()
+        similarity = 0
+        if method == Similarity.jaccard.name:
+            similarity = self.jaccard_similarity(list1=self.data_frame.df[first_class], list2=self.data_frame.df[second_class])
+        if method == Similarity.dice.name:
+            similarity = self.dice_similarity(list1=self.data_frame.df[first_class], list2=self.data_frame.df[second_class])
+        msg = QMessageBox()
+        msg.setText('Similarity: ' + str(similarity))
+        msg.setWindowTitle('Similarity value')
+        msg.setStandardButtons(QMessageBox.Ok)
+        msg.buttonClicked.connect(lambda: msg.close())
+        msg.show()
 
     def add_new_object(self):
         k = int(self.ui_new_obj.K_value.text())
@@ -552,6 +583,14 @@ class Ui_MainWindow(object):
             multiply = subtract_t.dot(inv_cov).dot(subtract)
             distance[j] = multiply
         return distance
+
+    def jaccard_similarity(self, list1, list2):
+        intersection = len(list(set(list1).intersection(list2)))
+        union = (len(list1) + len(list2)) - intersection
+        return float(intersection) / union
+
+    def dice_similarity(self, list1, list2):
+        return np.sum(list1[list2 == len(set(list1))])*2.0 / (np.sum(list1) + np.sum(list2))
 
 
 if __name__ == "__main__":
