@@ -339,8 +339,8 @@ class Ui_MainWindow(object):
         similarity = 0
         if method == Similarity.jaccard.name:
             similarity = self.jaccard_similarity(list1=self.data_frame.df[first_class], list2=self.data_frame.df[second_class])
-        if method == Similarity.dice.name:
-            similarity = self.dice_similarity(list1=self.data_frame.df[first_class], list2=self.data_frame.df[second_class])
+        if method == Similarity.simple_matching.name:
+            similarity = self.simple_matching_similarity(list1=self.data_frame.df[first_class], list2=self.data_frame.df[second_class])
         msg = QMessageBox()
         msg.setText('Similarity: ' + str(similarity))
         msg.setWindowTitle('Similarity value')
@@ -585,12 +585,22 @@ class Ui_MainWindow(object):
         return distance
 
     def jaccard_similarity(self, list1, list2):
-        intersection = len(list(set(list1).intersection(list2)))
-        union = (len(list1) + len(list2)) - intersection
-        return float(intersection) / union
+        i = 0
+        for i, item in enumerate(list1):
+            if list1[i] == list2[i]:
+                i += 1
+        union = (len(list1) + len(list2)) - i
+        return float(i) / union
 
-    def dice_similarity(self, list1, list2):
-        return np.sum(list1[list2 == len(set(list1))])*2.0 / (np.sum(list1) + np.sum(list2))
+    # def dice_similarity(self, list1, list2):
+    #     return np.sum(list1[list2 == len(set(list1))])*2.0 / (np.sum(list1) + np.sum(list2))
+
+    def simple_matching_similarity(self, list1, list2):
+        i = 0
+        for i, item in enumerate(list1):
+            if list1[i] == list2[i]:
+                i += 1
+        return i / len(list1)
 
 
 if __name__ == "__main__":
