@@ -36,7 +36,7 @@ class GroupDialog(QDialog):
     def __create_columns_layout(self):
         self.columns_layout = QHBoxLayout()
         self.columns_combobox = QComboBox()
-        for col in self.data_frame.df.columns:
+        for col in self.data_frame.columns:
             self.columns_combobox.addItem(col)
         self.columns_label = QLabel("Class column: ")
         self.columns_layout.addWidget(self.columns_label)

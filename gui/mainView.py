@@ -232,7 +232,7 @@ class Ui_MainWindow(object):
         self.ui_classify.okButton.clicked.connect(lambda: self.classify())
 
     def groupDialog(self):
-        self.group_dialog = GroupDialog(self.data_frame)
+        self.group_dialog = GroupDialog(self.data_frame.df.iloc[:, : self.columns_number])
         self.group_dialog.show()
         self.group_dialog.ok_button.clicked.connect(lambda: self.group())
         self.group_dialog.cancel_button.clicked.connect(lambda: self.group_dialog.close())
@@ -269,9 +269,10 @@ class Ui_MainWindow(object):
         self.close_classify_dialog()
 
     def group(self):
+        temp_df = self.data_frame.df.iloc[:, : self.columns_number]
         class_name = self.group_dialog.columns_combobox.currentText()
         k = self.group_dialog.class_number.value()
-        centroids = self.data_frame.df.sample(k)
+        centroids = temp_df.sample(k)
         centroids = centroids.drop(class_name, axis=1)
         method = self.group_dialog.method_combobox.currentText()
         while True:
@@ -280,26 +281,26 @@ class Ui_MainWindow(object):
                 for c in centroids.iloc:
                     distances.append(self.manhattan_distance(
                         ' '.join(
-                            [str(c[column]) for column in self.data_frame.df.columns.tolist() if column != class_name])
-                        , self.data_frame.df
+                            [str(c[column]) for column in temp_df.columns.tolist() if column != class_name])
+                        , temp_df
                     ))
             if method == Method.mahalanobis.name:
                 for c in centroids.iloc:
                     distances.append(self.mahalanobis_distance(
-                        ' '.join([str(c[column]) for column in self.data_frame.df.columns.tolist() if column != class_name])
-                        , self.data_frame.df
+                        ' '.join([str(c[column]) for column in temp_df.columns.tolist() if column != class_name])
+                        , temp_df
                     ))
             if method == Method.euclidean.name:
                 for c in centroids.iloc:
                     distances.append(self.euclidean_distance(
-                        ' '.join([str(c[column]) for column in self.data_frame.df.columns.tolist() if column != class_name])
-                        , self.data_frame.df
+                        ' '.join([str(c[column]) for column in temp_df.columns.tolist() if column != class_name])
+                        , temp_df
                     ))
             if method == Method.chebyshev.name:
                 for c in centroids.iloc:
                     distances.append(self.chebyshev_distance(
-                        ' '.join([str(c[column]) for column in self.data_frame.df.columns.tolist() if column != class_name])
-                        , self.data_frame.df
+                        ' '.join([str(c[column]) for column in temp_df.columns.tolist() if column != class_name])
+                        , temp_df
                     ))
 
             groups = [[] for cu in range(k)]
@@ -313,20 +314,20 @@ class Ui_MainWindow(object):
                 groups[index].append(i)
             data = []
             for group in groups:
-                group_zero = self.data_frame.df.iloc[group]
+                group_zero = temp_df.iloc[group]
                 means = {}
-                for c in self.data_frame.df.columns.tolist():
+                for c in temp_df.columns.tolist():
                     if c != class_name:
                         means[c] = group_zero[c].mean()
                 data.append(means)
             temp = pd.DataFrame(data)
             classes = []
             if centroids.equals(temp):
-                for i in self.data_frame.df.index.tolist():
+                for i in temp_df.index.tolist():
                     for g, c in enumerate(groups):
                         if i in c:
                             classes.append(g + 1)
-                self.data_frame.df.insert(len(self.data_frame.df.columns) - 1, "Groups: " + class_name, classes, True)
+                self.data_frame.df.insert(len(self.data_frame.df.columns), "Groups: " + method, classes, True)
                 self.setup_table(self.data_frame.df)
                 self.group_dialog.close()
                 break
@@ -443,7 +444,12 @@ class Ui_MainWindow(object):
     def change_to_num(self):
         col = self.ui_num.comboBoxColumn.currentText()
         is_alpha = self.ui_num.radioButtonAlpha.isChecked()
-        self.data_frame.change_to_number(col, is_alpha)
+        addInNewColumn = self.ui_num.newColumnCheckbox.isChecked()
+        if addInNewColumn:
+            self.data_frame.add_to_number(col, is_alpha)
+            self.setup_table(self.data_frame.df)
+        else:
+            self.data_frame.change_to_number(col, is_alpha)
         # metrics: Metrics = Metrics(len(self.data_frame.df.index), self.data_frame.df)
         # metrics.calculate_chebyshev(len(self.data_frame.df.index))
         self.close_num_dialog()
@@ -487,6 +493,7 @@ class Ui_MainWindow(object):
         self.setup_table(self.data_frame.df)
         print(self.data_frame.df.columns)
         print(self.data_frame.df.dtypes)
+        self.columns_number = len(self.data_frame.df.columns)
         self.close_file_dialog()
 
     def close_file_dialog(self):

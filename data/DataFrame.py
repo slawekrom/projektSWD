@@ -17,6 +17,16 @@ class DataFrame:
         self.df[column_name] = self.df[column_name].map(values_dict)
         print(self.df.sample(2))
 
+    def add_to_number(self, column_name: str,
+                         alphabetic_order: bool):  # true - alfabetyczne, false - według wystapienia
+        values_list = self.df[column_name].unique().tolist()
+        if alphabetic_order:
+            values_list.sort()
+        print(values_list)
+        values_dict = {key: i for i, key in enumerate(values_list, start=1)}
+        self.df.insert(len(self.df.columns), column_name + ": numeric", self.df[column_name].map(values_dict), True)
+        print(self.df.sample(2))
+
     def discretize(self, column_name: str, setsNumber):
         self.df[column_name + '_discrete'] = pd.cut(self.df[column_name], int(setsNumber))
 
