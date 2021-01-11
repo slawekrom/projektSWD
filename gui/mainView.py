@@ -84,12 +84,15 @@ class Ui_MainWindow(object):
         self.actionClassify.setObjectName("actionClassify")
         self.actionGroup = QtWidgets.QAction(MainWindow)
         self.actionGroup.setObjectName("actionGroup")
+        self.actionGroupWithSample = QtWidgets.QAction(MainWindow)
+        self.actionGroupWithSample.setObjectName("actionGroupWithSample")
         self.actionSimilarity = QtWidgets.QAction(MainWindow)
         self.actionSimilarity.setObjectName("actionSimilarity")
         self.menuFile.addAction(self.actionLoad_data)
         self.menuFile.addAction(self.actionAddObject)
         self.menuFile.addAction(self.actionClassify)
         self.menuFile.addAction(self.actionGroup)
+        self.menuFile.addAction(self.actionGroupWithSample)
         self.menuFile.addAction(self.actionSimilarity)
         self.menuEdit.addAction(self.actionChangeValOnNUmber)
         self.menuEdit.addAction(self.actionDiscretize)
@@ -116,6 +119,7 @@ class Ui_MainWindow(object):
         self.actionAddObject.triggered.connect(lambda: self.newobject_dialog())
         self.actionClassify.triggered.connect(lambda: self.classifyDialog())
         self.actionGroup.triggered.connect(lambda: self.groupDialog())
+        self.actionGroupWithSample.triggered.connect(lambda: self.groupAllDialog())
         self.actionSimilarity.triggered.connect(lambda: self.similarityDialog())
 
         self.retranslateUi(MainWindow)
@@ -140,6 +144,7 @@ class Ui_MainWindow(object):
         self.actionAddObject.setText(_translate("MainWindow", "Dodaj obiekt"))
         self.actionClassify.setText(_translate("MainWindow", "Klasyfikacja"))
         self.actionGroup.setText(_translate("MainWindow", "Grupowanie"))
+        self.actionGroupWithSample.setText(_translate("MainWindow", "Grupowanie wszystkich"))
         self.actionSimilarity.setText(_translate("MainWindow", "Miara podobienstwa"))
 
     def openDialogLoad(self):
@@ -235,6 +240,12 @@ class Ui_MainWindow(object):
         self.group_dialog = GroupDialog(self.data_frame.df.iloc[:, : self.columns_number])
         self.group_dialog.show()
         self.group_dialog.ok_button.clicked.connect(lambda: self.group())
+        self.group_dialog.cancel_button.clicked.connect(lambda: self.group_dialog.close())
+
+    def groupAllDialog(self):
+        self.group_dialog = GroupDialog(self.data_frame.df.iloc[:, : self.columns_number])
+        self.group_dialog.show()
+        self.group_dialog.ok_button.clicked.connect(lambda: self.groupAll())
         self.group_dialog.cancel_button.clicked.connect(lambda: self.group_dialog.close())
 
     def similarityDialog(self):
@@ -333,15 +344,88 @@ class Ui_MainWindow(object):
                 break
             centroids = temp
 
+    def group_with_centroids(self, centroids, method):
+        temp_df = self.data_frame.df.iloc[:, : self.columns_number]
+        class_name = self.group_dialog.columns_combobox.currentText()
+        k = self.group_dialog.class_number.value()
+        while True:
+            distances = []
+            if method == Method.manhattan.name:
+                for c in centroids.iloc:
+                    distances.append(self.manhattan_distance(
+                        ' '.join(
+                            [str(c[column]) for column in temp_df.columns.tolist() if column != class_name])
+                        , temp_df
+                    ))
+            if method == Method.mahalanobis.name:
+                for c in centroids.iloc:
+                    distances.append(self.mahalanobis_distance(
+                        ' '.join([str(c[column]) for column in temp_df.columns.tolist() if column != class_name])
+                        , temp_df
+                    ))
+            if method == Method.euclidean.name:
+                for c in centroids.iloc:
+                    distances.append(self.euclidean_distance(
+                        ' '.join([str(c[column]) for column in temp_df.columns.tolist() if column != class_name])
+                        , temp_df
+                    ))
+            if method == Method.chebyshev.name:
+                for c in centroids.iloc:
+                    distances.append(self.chebyshev_distance(
+                        ' '.join([str(c[column]) for column in temp_df.columns.tolist() if column != class_name])
+                        , temp_df
+                    ))
+
+            groups = [[] for cu in range(k)]
+            for i, distance in enumerate(distances[0]):
+                min_value = distances[0][i]
+                index = 0
+                for row in range(len(distances)):
+                    if distances[row][i] < min_value:
+                        index = row
+                        min_value = distances[row][i]
+                groups[index].append(i)
+            data = []
+            for group in groups:
+                group_zero = temp_df.iloc[group]
+                means = {}
+                for c in temp_df.columns.tolist():
+                    if c != class_name:
+                        means[c] = group_zero[c].mean()
+                data.append(means)
+            temp = pd.DataFrame(data)
+            classes = []
+            if centroids.equals(temp):
+                for i in temp_df.index.tolist():
+                    for g, c in enumerate(groups):
+                        if i in c:
+                            classes.append(g + 1)
+                self.data_frame.df.insert(len(self.data_frame.df.columns), "Groups: " + method, classes, True)
+                self.setup_table(self.data_frame.df)
+                self.group_dialog.close()
+                break
+            centroids = temp
+
+    def groupAll(self):
+        temp_df = self.data_frame.df.iloc[:, : self.columns_number]
+        class_name = self.group_dialog.columns_combobox.currentText()
+        k = self.group_dialog.class_number.value()
+        centroids = temp_df.sample(k)
+        centroids = centroids.drop(class_name, axis=1)
+        self.group_with_centroids(centroids, Method.euclidean.name)
+        self.group_with_centroids(centroids, Method.manhattan.name)
+        self.group_with_centroids(centroids, Method.mahalanobis.name)
+        self.group_with_centroids(centroids, Method.chebyshev.name)
+
     def similarity(self):
         first_class = self.similarity_dialog.first_column_combobox.currentText()
         second_class = self.similarity_dialog.second_column_combobox.currentText()
         method = self.similarity_dialog.method_combobox.currentText()
         similarity = 0
         if method == Similarity.jaccard.name:
-            similarity = self.jaccard_similarity(list1=self.data_frame.df[first_class], list2=self.data_frame.df[second_class])
+            similarity = self.jaccard_similarity(list1=self.data_frame.df[first_class].values, list2=self.data_frame.df[second_class].values)
         if method == Similarity.simple_matching.name:
-            similarity = self.simple_matching_similarity(list1=self.data_frame.df[first_class], list2=self.data_frame.df[second_class])
+            similarity = self.simple_matching_similarity(list1=self.data_frame.df[first_class].values, list2=self.data_frame.df[second_class].values)
         msg = QMessageBox()
         msg.setText('Similarity: ' + str(similarity))
         msg.setWindowTitle('Similarity value')
@@ -592,22 +676,22 @@ class Ui_MainWindow(object):
         return distance
 
     def jaccard_similarity(self, list1, list2):
-        i = 0
+        iter = 0
         for i, item in enumerate(list1):
             if list1[i] == list2[i]:
-                i += 1
-        union = (len(list1) + len(list2)) - i
-        return float(i) / union
+                iter += 1
+        union = (len(list1) + len(list2)) - iter
+        return float(iter) / union
 
     # def dice_similarity(self, list1, list2):
     #     return np.sum(list1[list2 == len(set(list1))])*2.0 / (np.sum(list1) + np.sum(list2))
 
     def simple_matching_similarity(self, list1, list2):
-        i = 0
+        iter = 0
         for i, item in enumerate(list1):
             if list1[i] == list2[i]:
-                i += 1
-        return i / len(list1)
+                iter += 1
+        return iter / len(list1)
 
 
 if __name__ == "__main__":
