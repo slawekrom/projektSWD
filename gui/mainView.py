@@ -262,7 +262,7 @@ class Ui_MainWindow(object):
 
     def build_decision_tree(self):
         decisionTree: DecisionTree = DecisionTree(self.data_frame.df)
-        decisionTree.calculate_main_entropy()
+        decisionTree.build_tree()
 
     def classify(self):
         metrics: Metrics = Metrics(len(self.data_frame.df.index), self.data_frame.df)

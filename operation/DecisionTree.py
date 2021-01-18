@@ -17,7 +17,7 @@ class DecisionTree:
         mainEntropy = 0
         for i in range(len(counter)):
             mainEntropy+= self.calculate_entropy(round(counter[i][1]/rows,2))
-        print(mainEntropy)
+        print('main entropy ' + str(mainEntropy))
         self.mainEntropy = mainEntropy
         return mainEntropy
 
@@ -26,21 +26,46 @@ class DecisionTree:
         mainEntropy = self.calculate_main_entropy(self.df)
 
         root: Node = Node('root', '', self.df)
+        root.add_children(self.make_node(self.df, mainEntropy))
+        # attributes_info_gain = dict()
+        # columns = self.df.columns[:-1]
+        # for column in columns:
+        #     attributes_info_gain.update({column: self.calculate_attribute_entropy(column, self.df, mainEntropy)})
+        #
+        # best_attribute = max(attributes_info_gain, key=attributes_info_gain.get)
+        # values = self.df[best_attribute].unique().tolist()
+        # for value in values:
+        #     tmp_df = self.df.loc[self.df[best_attribute] == value]
+        #     classes = tmp_df[tmp_df.columns[-1]].nunique()
+        #     if classes == 1: #obiekty jednej klasy - robimy liść
+        #         node: Node = Node('leaf', '', tmp_df)
+        #     else:
+        #         tmp_df.drop([best_attribute])
+        #         node: Node = Node('node', '', tmp_df)
+
+    def make_node(self, df: DataFrame, mainEntropy):
+        nodes = list()
         attributes_info_gain = dict()
-        columns = self.df.columns[:-1]
+        columns = df.columns[:-1]
         for column in columns:
-            attributes_info_gain.update({column: self.calculate_attribute_entropy(column, self.df, mainEntropy)})
+            attributes_info_gain.update({column: self.calculate_attribute_entropy(column, df, mainEntropy)})
 
         best_attribute = max(attributes_info_gain, key=attributes_info_gain.get)
-        values = self.df[best_attribute].unique().tolist()
+        values = df[best_attribute].unique().tolist()
         for value in values:
-            tmp_df = self.df.loc[self.df[best_attribute] == value]
+            tmp_df = df.loc[df[best_attribute] == value]
             classes = tmp_df[tmp_df.columns[-1]].nunique()
-            if classes == 1: #obiekty jednej klasy - robimy liść
+            if classes == 1 or len(columns) == 1:  # obiekty jednej klasy - robimy liść
                 node: Node = Node('leaf', '', tmp_df)
+                nodes.append(node)
             else:
-                tmp_df.drop([best_attribute])
+                tmp_df = tmp_df.drop([best_attribute], axis=1)
                 node: Node = Node('node', '', tmp_df)
+                node_main_entropy = self.calculate_main_entropy(tmp_df)
+                node.add_children(self.make_node(tmp_df, node_main_entropy))
+                nodes.append(node)
+
+        return nodes
 
     def calculate_entropy(self, p: float):
        return -p * math.log2(p)
@@ -62,5 +87,5 @@ class DecisionTree:
                 column_entropy+=(counter2[i][1]/rows) * self.calculate_entropy(round(counter_classes[j][1]/tmp_rows,2))
 
         info_gain = mainEntropy - column_entropy
-        print(info_gain)
+        print('info gain atribute' + column + ' ' + str(info_gain))
         return info_gain
