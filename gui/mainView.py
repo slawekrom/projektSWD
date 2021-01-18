@@ -29,6 +29,7 @@ from gui.Histogram import Histogram
 from metrics.Metrics import Metrics
 from gui.AddObject import AddObject
 from gui.ClassifyDialog import ClassifyDialog
+from operation.DecisionTree import DecisionTree
 
 
 class Ui_MainWindow(object):
@@ -88,12 +89,15 @@ class Ui_MainWindow(object):
         self.actionGroupWithSample.setObjectName("actionGroupWithSample")
         self.actionSimilarity = QtWidgets.QAction(MainWindow)
         self.actionSimilarity.setObjectName("actionSimilarity")
+        self.actionDecisionTree = QtWidgets.QAction(MainWindow)
+        self.actionDecisionTree.setObjectName("actionDecisionTree")
         self.menuFile.addAction(self.actionLoad_data)
         self.menuFile.addAction(self.actionAddObject)
         self.menuFile.addAction(self.actionClassify)
         self.menuFile.addAction(self.actionGroup)
         self.menuFile.addAction(self.actionGroupWithSample)
         self.menuFile.addAction(self.actionSimilarity)
+        self.menuFile.addAction(self.actionDecisionTree)
         self.menuEdit.addAction(self.actionChangeValOnNUmber)
         self.menuEdit.addAction(self.actionDiscretize)
         self.menuEdit.addAction(self.actionNorm)
@@ -121,6 +125,7 @@ class Ui_MainWindow(object):
         self.actionGroup.triggered.connect(lambda: self.groupDialog())
         self.actionGroupWithSample.triggered.connect(lambda: self.groupAllDialog())
         self.actionSimilarity.triggered.connect(lambda: self.similarityDialog())
+        self.actionDecisionTree.triggered.connect(lambda: self.build_decision_tree())
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -146,6 +151,7 @@ class Ui_MainWindow(object):
         self.actionGroup.setText(_translate("MainWindow", "Grupowanie"))
         self.actionGroupWithSample.setText(_translate("MainWindow", "Grupowanie wszystkich"))
         self.actionSimilarity.setText(_translate("MainWindow", "Miara podobienstwa"))
+        self.actionDecisionTree.setText(_translate("MainWindow", "Drzewo decyzyjne"))
 
     def openDialogLoad(self):
         self.open_file_dialog = QtWidgets.QDialog()
@@ -253,6 +259,10 @@ class Ui_MainWindow(object):
         self.similarity_dialog.show()
         self.similarity_dialog.ok_button.clicked.connect(lambda: self.similarity())
         self.similarity_dialog.cancel_button.clicked.connect(lambda: self.similarity_dialog.close())
+
+    def build_decision_tree(self):
+        decisionTree: DecisionTree = DecisionTree(self.data_frame.df)
+        decisionTree.calculate_main_entropy()
 
     def classify(self):
         metrics: Metrics = Metrics(len(self.data_frame.df.index), self.data_frame.df)
@@ -542,10 +552,11 @@ class Ui_MainWindow(object):
     def discretize(self):
         col = self.ui_disc.comboBoxColumn.currentText()
         sets_number = self.ui_disc.lineSetNumber.text()
-        self.data_frame.discretize(col, sets_number)
+        new_column = self.ui_disc.checkBox_newColumn.isChecked()
+        self.data_frame.discretize(col, sets_number, new_column)
         self.setup_table(self.data_frame.df)
         self.setup_table(self.data_frame.df)
-        self.close_discretize_dialog()
+        #self.close_discretize_dialog()
 
     def normalize(self):
         col = self.ui_norm.comboBoxColumn.currentText()

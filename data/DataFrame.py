@@ -27,8 +27,24 @@ class DataFrame:
         self.df.insert(len(self.df.columns), column_name + ": numeric", self.df[column_name].map(values_dict), True)
         print(self.df.sample(2))
 
-    def discretize(self, column_name: str, setsNumber):
-        self.df[column_name + '_discrete'] = pd.cut(self.df[column_name], int(setsNumber))
+    def discretize(self, column_name: str, setsNumber, new_column:bool):
+        labels = []
+        fract = round(1/int(setsNumber),2)
+        labels.append(0)
+        for i in range(1, int(setsNumber)):
+            element = i*fract
+            labels.append(element)
+
+        labels.append(1)
+
+        if new_column:
+            self.df[column_name + '_discrete'] = pd.qcut(self.df[column_name],q=labels,
+                            labels=False,
+                            precision=0)
+        else:
+            self.df[column_name] = pd.qcut(self.df[column_name], q=labels,
+                                                         labels=False,
+                                                         precision=0)
 
     def normalize(self, column_name):
         self.df[column_name + '_normalize'] = np.round_(

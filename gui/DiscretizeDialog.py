@@ -38,6 +38,12 @@ class DiscretizeDialog(object):
         font.setPointSize(13)
         self.cancelButton.setFont(font)
         self.cancelButton.setObjectName("cancelButton")
+        self.checkBox_newColumn = QtWidgets.QCheckBox(Dialog)
+        self.checkBox_newColumn.setGeometry(QtCore.QRect(70, 190, 161, 31))
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.checkBox_newColumn.setFont(font)
+        self.checkBox_newColumn.setObjectName("checkBox_newColumn")
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -49,3 +55,4 @@ class DiscretizeDialog(object):
         self.label.setText(_translate("Dialog", "Liczba przedziałów"))
         self.okButton.setText(_translate("Dialog", "OK"))
         self.cancelButton.setText(_translate("Dialog", "Anuluj"))
+        self.checkBox_newColumn.setText(_translate("Dialog", "Nowa kolumna?"))
